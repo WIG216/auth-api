@@ -17,4 +17,13 @@ const TrainerSchema = new mongoose.Schema({
 
 const Trainer = mongoose.model('Trainer', TrainerSchema);
 
-module.exports = Trainer;
+const validate = (user) => {
+  const schema = Joi.object({
+      name: Joi.string().required(),
+      email: Joi.string().email().required(),
+      password: Joi.string().required(),
+  });
+  return schema.validate(user);
+};
+
+module.exports = {Trainer, validate};

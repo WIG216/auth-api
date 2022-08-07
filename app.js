@@ -3,7 +3,8 @@ const expressLayouts = require("express-ejs-layouts");
 const mongoose = require("mongoose");
 const flash = require("connect-flash");
 const session = require("express-session");
-const passport  = require("passport")
+const passport  = require("passport");
+const passportLocalMongoose  = require("passport-local-mongoose");
 
 const app = express();
 
@@ -50,10 +51,11 @@ app.use((req,res,next) =>{
 })
 
 //Routes
-// app.use("/", require("./routes/index"));
-app.use("/admin", require("./routes/admin"));
+app.use("/", require("./routes/index"));
+// app.use("/users", require("./routes/users"));
+// app.use("/admin", require("./routes/admin"));
 app.use("/trainer", require("./routes/trainer"));
-app.use("/trainee", require("./routes/trainee"));
+// app.use("/trainee", require("./routes/trainee"));
 
 const PORT = process.env.PORT || 4200;
 

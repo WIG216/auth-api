@@ -1,88 +1,116 @@
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const passport = require("passport");
-
+const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcryptjs');
+const passport = require('passport');
+// Load User model
+const {Trainer, validate} = require('../models/trainer');
+const { forwardAuthenticated } = require('../config/auth');
 
-//Student Model
-const trainer = require("../models/trainer")
+// Login Page
+// router.get('/login', forwardAuthenticated, (req, res) => res.render('login'));
+router.get('/changepassword', forwardAuthenticated, (req, res) => res.render('login'));
 
-//login page
-router.get("/login", (req,res) => res.render("login"));
+// Register Page
+router.get('/register', forwardAuthenticated, (req, res) => res.render('register'));
 
-//Register page
-router.get("/register", (req,res) => res.render("register"));
+// Register
+router.post('/register', (req, res) => {
+  const { name, email, password, password2 } = req.body;
+  let errors = [];
 
-//Register Handle
-router.post("/register", (req,res) => {
-    const {name,email,password,password2} = req.body;
-    let errors = [];
+  if (!name || !email || !password || !password2) {
+    errors.push({ msg: 'Please enter all fields' });
+  }
 
-    //check required fields
-    if(!name||!email||!password||!password2){
-        errors.push({msg: "Please fill in all the fields"});
-    }else if(password !== password2){
-        errors.push({msg: "Password do not match"});
-    }else if(password.length<6){
-        errors.push({msg:"Password should be at least 6 characters"})
-    }else if(errors.length>0){
-        res.render("register",
-        {
-            errors,
-            name,
-            email,
-            password,
-            password2
-        })
-    }else{
-        //Validation
-        User.findOne({email: email})
-            .then(user => {
-                if(user){
-                    //user exist
-                    errors.push({msg: "Email is already registered"})
-                    res.render("register",
-                    {
-                        errors,
-                        name,
-                        email,
-                        password,
-                        password2
-                    });
-                }else{
-                    const newUser = new User({
-                        name,
-                        email,
-                        password
-                    });
+  if (password != password2) {
+    errors.push({ msg: 'Passwords do not match' });
+  }
 
-                    //hash password
-                    bcrypt.genSalt(10, (err, salt) => bcrypt.hash(newUser.password, salt, (err, hash)=>{
-                        if(err) throw err;
+  if (password.length < 6) {
+    errors.push({ msg: 'Password must be at least 6 characters' });
+  }
 
-                        //set password to hash
-                        newUser.password = hash;
+  if (errors.length > 0) {
+    res.render('register', {
+      errors,
+      name,
+      email,
+      password,
+      password2
+    });
+  } else {
+    Trainer.findOne({ email: email }).then(user => {
+      if (user) {
+        errors.push({ msg: 'Email already exists' });
+        res.render('register', {
+          errors,
+          name,
+          email,
+          password,
+          password2
+        });
+      } else {
+        const newUser = new Trainer({
+          name,
+          email,
+          password
+        });
 
-                        //save user
-                        newUser.save()
-                            .then(user =>{
-                                req.flash("success_msg", "You are now registered");
-                                res.redirect("/trainer/login")
-                            })
-                            .catch(err => console.log(err));
-                    }))
-                }
-            })
-    }
+        bcrypt.genSalt(10, (err, salt) => {
+          bcrypt.hash(newUser.password, salt, (err, hash) => {
+            if (err) throw err;
+            newUser.password = hash;
+            newUser
+              .save()
+              .then(user => {
+                req.flash(
+                  'success_msg',
+                  'You are now registered and can log in'
+                );
+                res.redirect('/trainer/login');
+              })
+              .catch(err => console.log(err));
+          });
+        });
+      }
+    });
+  }
 });
 
-//login handle
-router.post('/login', (req, res, next) => {
-    passport.authenticate('local', {
-      successRedirect: '/dashboard',
-      failureRedirect: '/trainer/login',
-      failureFlash: true
-    })(req, res, next);
-  });
-  
+
+// login route
+// router.post("/login", async (req, res) => {
+//     const body = req.body;
+//     const user = await Trainer.findOne({ email: body.email });
+//     if (user) {
+//       // check user password with hashed password stored in the database
+//       const validPassword = await bcrypt.compare(body.password, user.password);
+//       if (validPassword) {
+//         res.status(200).redirect("/dashboard");
+//       } else {
+//         res.status(400).redirect("/login");
+//       }
+//     } else {
+//       res.status(401).json({ error: "User does not exist" });
+//     }
+//   });
+
+  router.post('/changepassword', function (req, res) {
+    Trainer.findByUsername(req.body.name, (err, user) => {
+        if (err) {
+            res.send(err);
+        } else {
+            user.changePassword(req.body.oldpassword, 
+            req.body.newpassword, function (err) {
+                if (err) {
+                    res.send(err);
+                } else {
+                    res.send('successfully change password')
+                }
+            });
+
+        }
+    });
+ });
+
 module.exports = router;
