@@ -17,4 +17,13 @@ const AdminSchema = new mongoose.Schema({
 
 const Admin = mongoose.model('Admin', AdminSchema);
 
-module.exports = Admin;
+const validate = (user) => {
+  const schema = Joi.object({
+      name: Joi.string().required(),
+      email: Joi.string().email().required(),
+      password: Joi.string().required(),
+  });
+  return schema.validate(user);
+};
+
+module.exports = {Admin, validate};

@@ -5,6 +5,9 @@ const flash = require("connect-flash");
 const session = require("express-session");
 const passport  = require("passport");
 const passportLocalMongoose  = require("passport-local-mongoose");
+const trainerRouter = require("./routes/trainerRouter");
+const traineeRouter = require("./routes/traineeRouter");
+const adminRouter = require("./routes/adminRouter");
 
 const app = express();
 
@@ -25,7 +28,9 @@ app.use(expressLayouts);
 app.set("view engine", "ejs");
 
 //bodyParser
-app.use(express.urlencoded({ extended: false }));
+//body parser middleware
+app.use(express.json());
+app.use(express.urlencoded({extended: false}))
 
 //express session
 app.use(
@@ -51,11 +56,15 @@ app.use((req,res,next) =>{
 })
 
 //Routes
-app.use("/", require("./routes/index"));
+// app.use("/", require("./routes/index"));
 // app.use("/users", require("./routes/users"));
 // app.use("/admin", require("./routes/admin"));
-app.use("/trainer", require("./routes/trainer"));
+// app.use("/trainer", require("./routes/trainer"));
 // app.use("/trainee", require("./routes/trainee"));
+
+app.use(trainerRouter);
+app.use(traineeRouter);
+app.use(adminRouter);
 
 const PORT = process.env.PORT || 4200;
 

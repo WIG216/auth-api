@@ -17,4 +17,13 @@ const TraineeSchema = new mongoose.Schema({
 
 const Trainee = mongoose.model('Trainee', TraineeSchema);
 
-module.exports = Trainee;
+const validate = (user) => {
+  const schema = Joi.object({
+      name: Joi.string().required(),
+      email: Joi.string().email().required(),
+      password: Joi.string().required(),
+  });
+  return schema.validate(user);
+};
+
+module.exports = {Trainee, validate};
